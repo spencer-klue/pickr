@@ -34,7 +34,7 @@ header{display:flex;align-items:center;gap:18px;padding:12px 20px;border-bottom:
 .wordmark{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:26px;letter-spacing:.02em;line-height:1;display:flex;align-items:center;gap:10px}
 .wordmark .dot{width:12px;height:12px;border-radius:50%;background:var(--rz);box-shadow:0 0 0 0 rgba(224,38,46,.6);animation:pulse 2s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(224,38,46,.55)}70%{box-shadow:0 0 0 10px rgba(224,38,46,0)}100%{box-shadow:0 0 0 0 rgba(224,38,46,0)}}
-@media (prefers-reduced-motion: reduce){.wordmark .dot{animation:none} .lead.flash{animation:none}}
+@media (prefers-reduced-motion: reduce){.wordmark .dot{animation:none} .lead.flash{animation:none} .tile.bump{animation:none} .pollbar{transition:none}}
 .stat{display:flex;flex-direction:column;gap:1px}
 .stat b{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:20px;line-height:1}
 .spacer{flex:1}
@@ -55,6 +55,14 @@ section.full{grid-column:1/-1}
 .lead{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:hidden;position:relative}
 .lead.flash{animation:flash 1.2s ease-out}
 @keyframes flash{0%{box-shadow:0 0 0 4px var(--rz), var(--shadow)}100%{box-shadow:var(--shadow)}}
+.tile.bump{animation:bump 1.6s ease-out}
+.tile.bump.scored{animation:scored 2.2s ease-out}
+@keyframes bump{0%{background:color-mix(in srgb, var(--hot) 22%, var(--panel))}100%{background:var(--panel)}}
+@keyframes scored{0%{background:color-mix(in srgb, var(--rz) 30%, var(--panel));border-color:var(--rz)}100%{background:var(--panel)}}
+.ago{font-size:11px;color:var(--muted);letter-spacing:.02em;white-space:nowrap}
+.ago.fresh{color:var(--live);font-weight:600}
+.pollbar{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--live);opacity:.7;transition:width 1s linear}
+.stat .ago{font-size:12px}
 .lead .bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--rz);color:var(--rz-ink)}
 .lead .bar .label{color:inherit;opacity:.9}
 .lead .bar .why{margin-left:auto;font-family:"Barlow Condensed",sans-serif;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:14px}
@@ -268,11 +276,12 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
   <div class="wordmark"><span class="dot"></span>PICKR</div>
   <div class="stat"><span class="label">Live now</span><b id="liveCount">–</b></div>
   <div class="stat"><span class="label">Today</span><b id="todayCount">–</b></div>
-  <div class="stat"><span class="label">Updated</span><b id="updated">–</b></div>
+  <div class="stat"><span class="label">Updated</span><b id="updated">–</b><span class="ago" id="nextPoll"></span></div>
   <div class="spacer"></div>
-  <button class="pill" id="fcsBtn" title="Include FCS games in the board">FCS: off</button>
+  <button class="pill" id="fcsBtn" title="FCS is the smaller Division I tier (Montana, NDSU, the Ivies). Off keeps the board to the big FBS slate.">Small schools: off</button>
   <button class="pill" id="soundBtn" title="Chime when the lead game changes">Sound: off</button>
   <span class="pill" id="src">connecting…</span>
+  <span class="pollbar" id="pollbar"></span>
 </header>
 
 <main>
@@ -564,6 +573,8 @@ function heat(g){
 
 // ---------- state ----------
 let games = [], pinned = null, leaderId = null, sound = false, includeFCS = false, lastFetchOk = null;
+const seen = {};            // id -> {sig, at, scoreAt}: when each game's data last changed
+let nextPollAt = 0, lastRenderAt = 0;
 const panes = {};
 try { sound = localStorage.getItem('pk.sound') === '1'; includeFCS = localStorage.getItem('pk.fcs') === '1'; } catch(e){}
 
@@ -584,6 +595,7 @@ async function fetchGroup(group){
   }
 }
 async function load(){
+  nextPollAt = Date.now() + POLL_MS;
   try {
     const jobs = [fetchGroup(80)];
     if (includeFCS) jobs.push(fetchGroup(81).catch(()=>null));
@@ -592,6 +604,16 @@ async function load(){
     for (const e of fbs.events){ seen.add(e.id); evs.push(e); }
     if (fcs) for (const e of fcs.events){ if (!seen.has(e.id)){ e.__fcs = true; evs.push(e); } }
     games = evs.map(norm);
+    const now = Date.now();
+    for (const g of games){
+      const sig = [g.away.score, g.home.score, g.ddText, g.lastPlay, g.detail, g.poss].join('|');
+      const sc = g.away.score + '-' + g.home.score;
+      const prev = seen[g.id];
+      if (!prev) seen[g.id] = { sig, at: 0, scoreAt: 0, sc, new: true };   // first sight is not a change: no 'ago' until we see one
+      else if (prev.sig !== sig){ prev.sig = sig; prev.at = now; prev.new = false; if (prev.sc !== sc){ prev.sc = sc; prev.scoreAt = now; } }
+      g.changedAt = seen[g.id].at; g.scoredAt = seen[g.id].scoreAt; g.justChanged = seen[g.id].at === now && g.state === 'in';
+      g.justScored = g.justChanged && seen[g.id].scoreAt === now;
+    }
     for (const g of games) if (g.odds && (g.state === 'in' || oddsHist[g.id])) recordSnapshot(g);
     lastFetchOk = new Date();
     if (fbs.__delayed) setSrc('warn', 'delayed feed · ESPN is serving this network a cached copy (up to 4 min old)'); else setSrc('live', 'live feed');
@@ -629,7 +651,7 @@ function render(){
   $('#liveCount').textContent = live.length;
   $('#todayCount').textContent = todayCount;
   $('#updated').textContent = lastFetchOk ? fmtTime(lastFetchOk) : '—';
-  $('#fcsBtn').textContent = 'FCS: ' + (includeFCS ? 'on' : 'off');
+  $('#fcsBtn').textContent = 'Small schools: ' + (includeFCS ? 'on' : 'off');
   $('#fcsBtn').classList.toggle('on', includeFCS);
   $('#soundBtn').textContent = 'Sound: ' + (sound ? 'on' : 'off');
   $('#soundBtn').classList.toggle('on', sound);
@@ -707,7 +729,7 @@ function renderLead(x){
       <div class="clockbox">
         <div class="clk">${esc(g.detail)}</div>
         <div class="dd ${g.isRZ?'rz':''}">${g.isRZ?'RED ZONE · ':''}${esc(g.ddText || (g.statusName==='STATUS_HALFTIME'?'Halftime':'Between plays'))}</div>
-        <div class="label">${esc(w.net)}${w.free?' · free OTA':''}${g.fcs?' · FCS':''}</div>
+        <div class="label">${esc(w.net)}${w.free?' · free OTA':''}${g.fcs?' · FCS':''} · <span class="ago" data-ago="${g.changedAt||0}" data-ago-label="last play "></span></div>
       </div>
     </div>
     <div class="foot">
@@ -744,7 +766,7 @@ function renderRail(live, lead, soon){
   el.innerHTML = rows.map((x, i) => {
     const g = x.g, w = watchInfo(g);
     const lvl = x.h.score >= 60 ? 'h3' : x.h.score >= 30 ? 'h2' : 'h1';
-    return `<button class="tile ${lvl} ${pinned===g.id?'pinned':''}" data-pin="${g.id}" title="Pin ${esc(g.name)} as the lead">
+    return `<button class="tile ${lvl} ${pinned===g.id?'pinned':''} ${g.justChanged?'bump':''} ${g.justScored?'scored':''}" data-pin="${g.id}" title="Pin ${esc(g.name)} as the lead">
       <span class="heat"></span>
       <span class="rank">${i+2}</span>
       <span class="mat">
@@ -752,7 +774,7 @@ function renderRail(live, lead, soon){
         <span class="line ${g.poss==='home'?'poss':''}"><span>${g.home.rank?`<b class="rk">${g.home.rank}</b> `:''}${esc(g.home.name)}</span><span>${g.home.score}</span></span>
         <span class="sub">${g.isRZ?'<span class="rzflag">RED ZONE</span>':''}<span>${esc(g.ddText||'')}</span>${chips(x.h.reasons.slice(0,2))}${wall.open.some(o=>o.id===g.id)?'<span class="onwall">on wall</span>':''}</span>
       </span>
-      <span class="st"><span class="clk">${esc(g.detail)}</span><span class="net">${esc(w.net)}${w.free?' · FREE':''}</span></span>
+      <span class="st"><span class="clk">${esc(g.detail)}</span><span class="net">${esc(w.net)}${w.free?' · FREE':''}</span><span class="ago" data-ago="${g.changedAt||0}"></span></span>
       ${oddsRow(g)}
       ${betsFor(g.id).length?`<span class="tilebets">${betsFor(g.id).map(b=>{const st=betStatus(b,g);return `<span class="tilebet"><span class="who">${esc(betLabel(b,g))}${b.stake?` <span style="color:var(--muted);font-weight:500">${esc(b.stake)}</span>`:''}${betNow(b,g)?` <span style="color:var(--muted);font-weight:500">· ${esc(betNow(b,g))}</span>`:''}</span><span class="st ${st.k}">${esc(st.t)}</span></span>`;}).join('')}</span>`:''}
     </button>`;
@@ -1399,6 +1421,13 @@ $('#fcsBtn').addEventListener('click', () => {
 load();
 loadAirings();
 setInterval(load, POLL_MS);
+// once a second: "12s ago" on every game, "next in 7s" in the header, and the thin bar under the header
+function agoText(ms){ const sec = Math.max(0, Math.round(ms/1000)); if (sec < 3) return 'just now'; if (sec < 60) return sec + 's ago'; const m = Math.floor(sec/60); return m < 60 ? `${m}m ${String(sec%60).padStart(2,'0')}s ago` : `${Math.floor(m/60)}h ${m%60}m ago`; }
+setInterval(() => {
+  const now = Date.now();
+  document.querySelectorAll('[data-ago]').forEach(el => { const at = +el.dataset.ago; if (!at) { el.textContent = ''; return; } const ms = now - at; el.textContent = (el.dataset.agoLabel || '') + agoText(ms); el.classList.toggle('fresh', ms < 4000); });
+  if (lastFetchOk){ const left = Math.max(0, Math.ceil((nextPollAt - now)/1000)); $('#nextPoll').textContent = agoText(now - lastFetchOk) + ' · next in ' + left + 's'; $('#pollbar').style.width = Math.round(100 * (1 - left / (POLL_MS/1000))) + '%'; }
+}, 1000);
 setInterval(loadAirings, 60000);
 })();
 </script>

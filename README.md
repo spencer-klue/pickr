@@ -55,9 +55,10 @@ Here's what everything on the page is for, top to bottom.
 
 ### The top bar
 - **Live now / Today / Updated**: how many games are on right now, how many kick off today, and when the board last checked the scoreboard.
-- **FCS: off/on**: flip on to include the FCS games too (the smaller schools). Off by default so the board stays about the big slate.
+- **Small schools: off/on**: flip on to include FCS games too (the smaller Division I schools: Montana, North Dakota State, the Ivies). Off by default so the board stays about the big slate.
 - **Sound: off/on**: a short chime whenever the director changes the lead game. Handy if you're in the kitchen.
-- **The last pill** tells you where the scores are coming from. "live" is good. "snapshot" means the board couldn't reach the scoreboard and is showing you the last picture it saved.
+- **Updated**: when the board last checked, how long ago that was, and a countdown to the next check. The thin green line under the header is the same countdown.
+- **The last pill** tells you where the scores are coming from. "live feed" is good. "delayed feed" means ESPN is handing your network a cached copy that can be a few minutes old (it happens if a network hits ESPN too hard; it clears on its own). "snapshot" means the board couldn't reach the scoreboard at all and is showing you the last picture it saved.
 
 ### On the call
 The big red panel. This is the lead game, the one the director thinks you should be watching *right now*. You'll see the score, clock, who has the ball, the last play, a win-probability bar, and a **Watch** button that opens the broadcaster's own player.
@@ -66,6 +67,8 @@ The red bar across the top tells you *why* it picked this game: "Red zone", "FG 
 
 ### Pick order
 The list on the right is every live game, ranked hottest to coldest. The coloured stripe on the left of each tile is the heat: red is must-see, orange is warming up, grey is a wait-and-see.
+
+Each tile shows the score, the clock as of the last play, the channel, and how long ago that game last changed. A tile glows when a play comes in and flashes red when someone scores. The clock doesn't tick on its own, on purpose: ESPN reports the clock at the last play, and a football clock stops so often that a fake ticking clock would be wrong half the time.
 
 **Click any game to pin it as the lead.** Pinned means "stay here, I don't care what else happens." Click it again, or hit **Release pin**, to hand control back to the auto director. Pregame tiles show you the countdown to kickoff.
 
