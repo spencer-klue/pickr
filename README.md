@@ -35,6 +35,8 @@ The wall needs a tiny Chrome extension. It isn't in the Chrome Web Store, so you
 5. Click **Load unpacked** and pick that **`extension`** folder.
 6. Go back to the board and refresh the page. The "Video wall" box should now say the extension is connected.
 
+**On a phone** the board works fine in any browser, and the video wall box hides itself because phones can't run Chrome extensions. Think of the phone version as the feed: the director's pick up top, then the wire, then the ranked list.
+
 **Mac, Windows, Linux:** all the same steps. It has to be Chrome (or a Chrome-based browser like Brave or Edge). Safari and Firefox can't run it.
 
 **Got an AI helper?** If you use Claude Code or something like it, you can literally paste this: *"Clone https://github.com/spencer-klue/pickr and help me install the Chrome extension from the extension folder."* It'll get you to the Load unpacked step. The last click is yours, because Chrome insists.
@@ -56,7 +58,7 @@ Here's what everything on the page is for, top to bottom.
 ### The top bar
 - **Live now / Today / Updated**: how many games are on right now, how many kick off today, and when the board last checked the scoreboard.
 - **Small schools: off/on**: flip on to include FCS games too (the smaller Division I schools: Montana, North Dakota State, the Ivies). Off by default so the board stays about the big slate.
-- **Sound: off/on**: a short chime whenever the director changes the lead game. Handy if you're in the kitchen.
+- **Sound: off/on**: a short chime whenever the director changes the lead game, and a fanfare when a celebration card fires. Handy if you're in the kitchen.
 - **Updated**: when the board last checked, how long ago that was, and a countdown to the next check. The thin green line under the header is the same countdown.
 - **The last pill** tells you where the scores are coming from. "live feed" is good. "delayed feed" means ESPN is handing your network a cached copy that can be a few minutes old (it happens if a network hits ESPN too hard; it clears on its own). "snapshot" means the board couldn't reach the scoreboard at all and is showing you the last picture it saved.
 
@@ -64,6 +66,14 @@ Here's what everything on the page is for, top to bottom.
 The big red panel. This is the lead game, the one the director thinks you should be watching *right now*. You'll see the score, clock, who has the ball, the last play, a win-probability bar, and a **Watch** button that opens the broadcaster's own player.
 
 The red bar across the top tells you *why* it picked this game: "Red zone", "FG game", "Crunch time", "Overtime". Those little tags are the director's reasoning, out loud.
+
+### Just happened
+The wire. Every play from every live game lands here the moment the board sees it, newest on top, with the team's logo and colour, the new score, and how long ago it happened. Tap any line to jump to that game. Three levels to pick from:
+- **Big plays**: touchdowns, picks, fumbles, blocked kicks, turnovers on downs, safeties, overtime, and close finals.
+- **Scores & drives** (the default): all of the above plus field goals, red-zone trips, kickoffs, and every final.
+- **Every play**: the full play-by-play across the slate. Fun on a big screen, a firehose on a phone.
+
+**Celebration cards.** When something big happens in any game, a card in that team's colours slides down from the top of the screen: TOUCHDOWN, PICK SIX, INTERCEPTION, FUMBLE, OVERTIME, and so on, with the score and the play. It stays for a few seconds and then leaves on its own. Tap it to jump straight to that game. With **Sound** on you also get a little fanfare, and phones give a short buzz. This is the feature for when you're at one game and want to feel the other eleven.
 
 ### Pick order
 The list on the right is every live game, ranked hottest to coldest. The coloured stripe on the left of each tile is the heat: red is must-see, orange is warming up, grey is a wait-and-see.

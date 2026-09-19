@@ -63,6 +63,54 @@ section.full{grid-column:1/-1}
 .ago.fresh{color:var(--live);font-weight:600}
 .pollbar{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--live);opacity:.7;transition:width 1s linear}
 .stat .ago{font-size:12px}
+
+/* just happened */
+.moments{display:grid;gap:6px}
+.mo{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:8px 10px 8px 12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;position:relative;overflow:hidden;text-align:left;width:100%;cursor:pointer}
+.mo::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--team,var(--muted))}
+.mo.big{border-color:color-mix(in srgb, var(--team,var(--rz)) 55%, var(--line))}
+.mo.big::before{width:5px}
+.mo img{width:30px;height:30px;object-fit:contain}
+.mo .kind{font-family:"Barlow Condensed",sans-serif;font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:15px}
+.mo.big .kind{color:color-mix(in srgb, var(--team,var(--rz)) 65%, var(--ink))}
+.mo .who{font-weight:600}
+.mo .sc{color:var(--muted);font-weight:500}
+.mo .txt{font-size:13px;color:var(--muted);margin-top:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.mo .when{display:grid;justify-items:end;gap:2px}
+.mo .when .gm{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;color:var(--muted);white-space:nowrap}
+.mo.in{animation:moIn .55s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes moIn{0%{opacity:0;transform:translateY(-10px) scale(.97)}100%{opacity:1;transform:none}}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--panel2)}
+.seg button{padding:4px 10px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.seg button.on{background:var(--panel);color:var(--ink)}
+.moments .empty{padding:18px 10px}
+
+/* celebration card */
+.cele{position:fixed;left:50%;top:14px;width:min(560px,calc(100% - 24px));transform:translateX(-50%) translateY(-130%);opacity:0;z-index:20;
+  display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;padding:14px 18px;border-radius:14px;
+  background:linear-gradient(135deg,var(--team,#c0202a),color-mix(in srgb, var(--team,#c0202a) 70%, #000));color:var(--cele-ink,#fff);
+  box-shadow:0 18px 50px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.12) inset;cursor:pointer;
+  transition:transform .6s cubic-bezier(.2,.9,.25,1.15), opacity .35s ease}
+.cele.show{transform:translateX(-50%) translateY(0);opacity:1}
+.cele.out{transform:translateX(-50%) translateY(-130%);opacity:0;transition:transform .45s cubic-bezier(.6,-.1,.8,.4), opacity .3s ease}
+.cele img{width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4))}
+.cele.show img{animation:pop .7s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pop{0%{transform:scale(.4) rotate(-12deg)}100%{transform:none}}
+.cele .k{font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:30px;letter-spacing:.06em;text-transform:uppercase;line-height:1}
+.cele .w{font-size:16px;font-weight:600;margin-top:3px;opacity:.95}
+.cele .s{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:20px;margin-top:4px}
+.cele .p{font-size:13px;opacity:.85;margin-top:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cele .bar{position:absolute;left:0;bottom:0;height:3px;background:var(--cele-ink,#fff);opacity:.7;width:100%;transform-origin:left;border-radius:0 0 14px 14px}
+.cele.show .bar{animation:drain var(--dur,6s) linear forwards}
+@keyframes drain{to{transform:scaleX(0)}}
+@media (prefers-reduced-motion: reduce){.mo.in{animation:none}.cele{transition:opacity .2s}.cele.show img{animation:none}}
+@media (max-width:700px){
+  body.no-ext #wallSection{display:none} .cele{top:8px} .cele .k{font-size:24px} .cele img{width:48px;height:48px}
+  header{gap:10px 14px;padding:8px 12px;flex-wrap:wrap} .wordmark{font-size:22px} .stat b{font-size:17px} .stat .ago{font-size:11px}
+  header .spacer{display:none} .pill{font-size:12px;padding:4px 8px} #src{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-basis:100%}
+  .sechead{flex-wrap:wrap;gap:8px 12px} .sechead h2{white-space:nowrap} .sechead .label{margin-left:0;flex-basis:100%}
+  main{padding:14px 12px 40px}
+}
 .lead .bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--rz);color:var(--rz-ink)}
 .lead .bar .label{color:inherit;opacity:.9}
 .lead .bar .why{margin-left:auto;font-family:"Barlow Condensed",sans-serif;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:14px}
@@ -288,10 +336,14 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
   <section>
     <div class="sechead"><h2>On the call</h2><span class="label" id="modeLabel">Auto director</span></div>
     <div id="lead" class="lead"><div class="empty">Waiting for the feed…</div></div>
+    <div class="sechead" style="margin-top:18px"><h2>Just happened</h2>
+      <span class="seg" id="moFilter" title="How much of the wire to show"><button data-lvl="big" type="button">Big plays</button><button data-lvl="mid" type="button" class="on">Scores &amp; drives</button><button data-lvl="play" type="button">Every play</button></span>
+      <span class="label" id="moLabel">across every live game</span></div>
+    <div id="moments" class="moments"><div class="empty">Plays show up here as they come in. Tap one to jump to that game.</div></div>
   </section>
 
   <section style="display:grid;gap:18px">
-    <div>
+    <div id="wallSection">
     <div class="sechead"><h2>Video wall</h2><span class="label" id="wallStatus">checking for extension…</span></div>
     <div class="wall">
       <div class="wallrow">
@@ -399,6 +451,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
   </section>
 </main>
 <div id="toast" class="switchtoast"></div>
+<div id="cele" class="cele" hidden></div>
 
 <script id="snap" type="application/json">__SNAPSHOT__</script>
 <script>
@@ -494,7 +547,7 @@ function norm(ev){
     const t = c.competitors.find(x => x.homeAway === ha);
     const r = t.curatedRank && t.curatedRank.current;
     return { id:t.team.id, abbr:t.team.abbreviation, name:t.team.shortDisplayName || t.team.displayName,
-             logo:t.team.logo, score: parseInt(t.score||'0',10), rank: (r && r <= 25) ? r : null };
+             logo:t.team.logo, color: t.team.color ? '#'+t.team.color : null, score: parseInt(t.score||'0',10), rank: (r && r <= 25) ? r : null };
   };
   const home = side('home'), away = side('away');
   const s = c.situation || {};
@@ -571,9 +624,111 @@ function heat(g){
   return { score: s, reasons: r };
 }
 
+// ---------- what just happened: compare a game with its previous poll ----------
+// level: big (celebration card), mid (scores, drives, finals), play (every logged play)
+function moments(p, g){
+  const out = [];
+  const lp = g.lastPlay || '', lpNew = lp && lp !== p.lastPlay;
+  const T = side => side === 'home' ? g.home : side === 'away' ? g.away : null;
+  const score = `${g.away.abbr} ${g.away.score}, ${g.home.abbr} ${g.home.score}`;
+  const lead = () => { const d = g.home.score - g.away.score, pd = p.home.score - p.away.score;
+    if (d === 0) return 'ties it'; if (Math.sign(d) !== Math.sign(pd) && pd !== 0) return 'takes the lead'; if (pd === 0) return 'takes the lead'; return ''; };
+  const add = (kind, level, team, text, extra) => out.push(Object.assign({ kind, level, team: team ? { abbr: team.abbr, name: team.name, logo: team.logo, color: team.color } : null, text: text || '', score, game: g.name, detail: g.detail }, extra || {}));
+  if (p.state === 'pre' && g.state === 'in'){ add('Kickoff', 'mid', null, `${g.away.name} at ${g.home.name} is under way`); return out; }
+  if (p.state === 'in' && g.state === 'post'){
+    const m = Math.abs(g.home.score - g.away.score), w = g.home.score > g.away.score ? g.home : g.away;
+    add('Final', m <= 8 || (g.home.rank && g.away.rank) ? 'big' : 'mid', w, `${w.name} win${m<=3?' a nail-biter':m<=8?' a one-score game':''}`); return out;
+  }
+  if (g.state !== 'in') return out;
+  if (p.period < 5 && g.period >= 5) add('Overtime', 'big', null, `${g.away.name} and ${g.home.name} are headed to overtime`);
+  let scored = false;
+  for (const side of ['home','away']){
+    const d = g[side].score - p[side].score; if (d <= 0) continue; scored = true;
+    const t = T(side), lc = lead();
+    if (d === 1) continue;                                                     // the PAT rides with the touchdown
+    if (d >= 6){
+      const how = /intercept/i.test(lp) ? 'Pick six' : /fumble/i.test(lp) ? 'Scoop and score' : /(punt|kick|kickoff) return/i.test(lp) ? 'Return touchdown' : 'Touchdown';
+      add(how, 'big', t, lp, { lead: lc });
+    } else if (d === 3) add('Field goal', 'mid', t, lp, { lead: lc });
+    else if (d === 2) add(/two.?point|2.?pt|conversion/i.test(lp) ? 'Two-point conversion' : 'Safety', /two.?point|2.?pt|conversion/i.test(lp) ? 'mid' : 'big', t, lp, { lead: lc });
+    else add('Scored', 'mid', t, lp, { lead: lc });
+  }
+  if (scored) return out;
+  const possChanged = p.poss && g.poss && p.poss !== g.poss;
+  if (lpNew){
+    if (/intercept/i.test(lp)) add('Interception', 'big', T(g.poss), lp);
+    else if (/fumble/i.test(lp) && possChanged) add('Fumble', 'big', T(g.poss), lp);
+    else if (/blocked/i.test(lp)) add('Blocked kick', 'big', T(g.poss), lp);
+    else if (/turnover on downs/i.test(lp) || (p.down === 4 && possChanged && !/punt|field goal|kick/i.test(lp))) add('Turnover on downs', 'big', T(g.poss), lp);
+    else if (/sack/i.test(lp)) add('Sack', 'play', T(g.poss === 'home' ? 'away' : 'home'), lp);
+    else if (!p.isRZ && g.isRZ) add('Red zone', 'mid', T(g.poss), lp || g.ddText);
+    else add(g.ddText || 'Play', 'play', T(g.poss), lp);
+  } else if (!p.isRZ && g.isRZ) add('Red zone', 'mid', T(g.poss), g.ddText);
+  return out;
+}
+
+let feed = [], moLevel = 'mid';
+try { moLevel = localStorage.getItem('pk.molvl') || 'mid'; } catch(e){}
+const LVL = { big: 3, mid: 2, play: 1 };
+function addMoments(list){
+  feed = list.concat(feed).sort((x, y) => y.at - x.at).slice(0, 80);
+  renderMoments(list);
+  for (const m of list) if (m.level === 'big') celebrate(m);
+}
+function renderMoments(fresh){
+  const el = $('#moments'); const min = LVL[moLevel];
+  const rows = feed.filter(m => LVL[m.level] >= min).slice(0, 40);
+  const isNew = new Set((fresh || []).map(m => m.id));
+  document.querySelectorAll('#moFilter button').forEach(b => b.classList.toggle('on', b.dataset.lvl === moLevel));
+  $('#moLabel').textContent = rows.length ? `${rows.length} in the last ${agoText(Date.now() - rows[rows.length-1].at).replace(' ago','')}` : 'across every live game';
+  if (!rows.length){ el.innerHTML = `<div class="empty">${feed.length ? 'Nothing at this level yet. Try "Every play".' : 'Plays show up here as they come in. Tap one to jump to that game.'}</div>`; return; }
+  el.innerHTML = rows.map(m => {
+    const t = m.team || {}; const col = t.color ? `--team:${t.color};--team-ink:${t.color}` : '';
+    return `<button class="mo ${m.level} ${isNew.has(m.id)?'in':''}" type="button" data-go="${m.gid}" style="${col}" title="Jump to ${esc(m.game)}">
+      ${t.logo ? `<img src="${esc(t.logo)}" alt="">` : '<span></span>'}
+      <span><span class="kind">${esc(m.kind)}</span> ${t.name ? `<span class="who">${esc(t.name)}</span>` : ''}${m.lead ? ` <span class="who">${esc(m.lead)}</span>` : ''} <span class="sc">· ${esc(m.score)}</span>
+        ${m.text ? `<div class="txt">${esc(m.text)}</div>` : ''}</span>
+      <span class="when"><span class="gm">${esc(m.game)}</span><span class="ago" data-ago="${m.at}"></span></span>
+    </button>`; }).join('');
+}
+$('#moFilter').addEventListener('click', e => { const b = e.target.closest('button[data-lvl]'); if (!b) return; moLevel = b.dataset.lvl; try{localStorage.setItem('pk.molvl', moLevel);}catch(e2){} renderMoments(); });
+$('#moments').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (!b) return; pinned = b.dataset.go; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+
+// the celebration card: one at a time, queued, tap to jump to the game
+const celeQ = []; let celeOn = false;
+function celebrate(m){ celeQ.push(m); if (celeQ.length > 4) celeQ.shift(); if (!celeOn) nextCele(); }
+function nextCele(){
+  const m = celeQ.shift(); if (!m){ celeOn = false; return; } celeOn = true;
+  const el = $('#cele'); const t = m.team || {}; const dur = 6500;
+  el.style.setProperty('--team', t.color || '#c0202a'); el.style.setProperty('--dur', dur + 'ms');
+  el.style.setProperty('--cele-ink', lightColor(t.color) ? '#101418' : '#ffffff');
+  el.dataset.go = m.gid;
+  el.innerHTML = `${t.logo ? `<img src="${esc(t.logo)}" alt="">` : '<span style="font-size:44px">🏈</span>'}<span><div class="k">${esc(m.kind)}</div>${t.name ? `<div class="w">${esc(t.name)}${m.lead ? ' · ' + esc(m.lead) : ''}</div>` : ''}<div class="s">${esc(m.score)}${m.detail ? ' · ' + esc(m.detail) : ''}</div>${m.text ? `<div class="p">${esc(m.text)}</div>` : ''}</span><span class="bar"></span>`;
+  el.hidden = false; el.classList.remove('out'); void el.offsetWidth; el.classList.add('show');
+  if (sound) fanfare();
+  try { if (navigator.vibrate) navigator.vibrate([60, 40, 60]); } catch(e){}
+  const done = () => { el.classList.remove('show'); el.classList.add('out'); setTimeout(() => { el.hidden = true; nextCele(); }, 450); };
+  el.onclick = () => { clearTimeout(el._t); pinned = el.dataset.go; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); done(); };
+  clearTimeout(el._t); el._t = setTimeout(done, dur);
+}
+function lightColor(hex){ if (!hex) return false; const n = parseInt(hex.slice(1), 16); const r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255; return (0.2126*r + 0.7152*g + 0.0722*b) / 255 > 0.58; }
+function fanfare(){
+  try {
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const t = actx.currentTime;
+    [[523.25,0],[659.25,0.1],[783.99,0.2],[1046.5,0.32],[1046.5,0.5]].forEach(([f,dt]) => {
+      const o = actx.createOscillator(), gn = actx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      gn.gain.setValueAtTime(0.0001, t+dt); gn.gain.exponentialRampToValueAtTime(0.28, t+dt+0.02); gn.gain.exponentialRampToValueAtTime(0.0001, t+dt+0.28);
+      o.connect(gn).connect(actx.destination); o.start(t+dt); o.stop(t+dt+0.32);
+    });
+  } catch(e){}
+}
+
 // ---------- state ----------
 let games = [], pinned = null, leaderId = null, sound = false, includeFCS = false, lastFetchOk = null;
 const seen = {};            // id -> {sig, at, scoreAt}: when each game's data last changed
+const lastById = {};        // previous poll's games, for spotting what happened
 let nextPollAt = 0, lastRenderAt = 0;
 const panes = {};
 try { sound = localStorage.getItem('pk.sound') === '1'; includeFCS = localStorage.getItem('pk.fcs') === '1'; } catch(e){}
@@ -614,6 +769,9 @@ async function load(){
       g.changedAt = seen[g.id].at; g.scoredAt = seen[g.id].scoreAt; g.justChanged = seen[g.id].at === now && g.state === 'in';
       g.justScored = g.justChanged && seen[g.id].scoreAt === now;
     }
+    const fresh = [];
+    for (const g of games){ const p = lastById[g.id]; if (p) for (const m of moments(p, g)) fresh.push(Object.assign({ at: now, gid: g.id, id: now + ':' + g.id + ':' + m.kind }, m)); lastById[g.id] = g; }
+    if (fresh.length) addMoments(fresh);
     for (const g of games) if (g.odds && (g.state === 'in' || oddsHist[g.id])) recordSnapshot(g);
     lastFetchOk = new Date();
     if (fbs.__delayed) setSrc('warn', 'delayed feed · ESPN is serving this network a cached copy (up to 4 min old)'); else setSrc('live', 'live feed');
@@ -1308,6 +1466,7 @@ function wallSync(lead){
 }
 
 function renderWall(){
+  document.body.classList.toggle('no-ext', !ext);
   const st = $('#wallStatus'), help = $('#wallHelp'), list = $('#wallOpenList');
   $('#wallOpen').disabled = !ext || wallBusy || !(lastLive.length || lastSoon.length);
   $('#wallClose').disabled = !ext || wallBusy || !wall.open.length;
