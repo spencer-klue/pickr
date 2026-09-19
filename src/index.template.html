@@ -386,7 +386,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
   </section>
 
   <section class="full">
-    <p class="note">The board reads ESPN's public scoreboard every 10 seconds and ranks live games on red-zone possession, score margin, clock, down, rankings, and win probability. Video is never rehosted: "Watch" opens the broadcaster's own player, and networks marked free are over-the-air in the US. Lines are DraftKings numbers as published by ESPN, for reference only; place bets in your own sportsbook app.</p>
+    <p class="note">The board reads ESPN's public scoreboard every 10 seconds (ESPN itself refreshes it about every 8 seconds, and the clock moves when a play is logged) and ranks live games on red-zone possession, score margin, clock, down, rankings, and win probability. Video is never rehosted: "Watch" opens the broadcaster's own player, and networks marked free are over-the-air in the US. Lines are DraftKings numbers as published by ESPN, for reference only; place bets in your own sportsbook app.</p>
   </section>
 </main>
 <div id="toast" class="switchtoast"></div>
@@ -397,7 +397,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
 // ESPN's own scoreboard page feed (same JSON, different host); the site.api host blocks browser traffic after heavy polling
 const API_CDN = 'https://cdn.espn.com/core/college-football/scoreboard';
 const API_SITE = 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard';
-const POLL_MS = 15000;
+const POLL_MS = 10000;
 const SOON_MS = 3 * 3600e3;   // pregame window: games kicking off within 3 hours are watchable (pregame coverage)
 const $ = s => document.querySelector(s);
 
@@ -568,16 +568,19 @@ const panes = {};
 try { sound = localStorage.getItem('pk.sound') === '1'; includeFCS = localStorage.getItem('pk.fcs') === '1'; } catch(e){}
 
 async function fetchGroup(group){
+  // site.api refreshes every ~8 s; ESPN's CDN copy is cached for ~4 minutes, so it is only a fallback.
   try {
+    const res = await fetch(`${API_SITE}?groups=${group}&limit=300`, {cache:'no-store'});
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const d = await res.json();
+    if (!d || !Array.isArray(d.events)) throw new Error('unexpected shape');
+    d.__delayed = false; return d;
+  } catch(e){
     const res = await fetch(`${API_CDN}?xhr=1&group=${group}`, {cache:'no-store'});
     if (!res.ok) throw new Error('HTTP '+res.status);
     const d = await res.json(); const sb = d && d.content && d.content.sbData;
     if (!sb || !Array.isArray(sb.events)) throw new Error('unexpected shape');
-    return sb;
-  } catch(e){
-    const res = await fetch(`${API_SITE}?groups=${group}&limit=300`, {cache:'no-store'});
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    return res.json();
+    sb.__delayed = true; return sb;
   }
 }
 async function load(){
@@ -591,7 +594,7 @@ async function load(){
     games = evs.map(norm);
     for (const g of games) if (g.odds && (g.state === 'in' || oddsHist[g.id])) recordSnapshot(g);
     lastFetchOk = new Date();
-    setSrc('live', 'live feed');
+    if (fbs.__delayed) setSrc('warn', 'delayed feed · ESPN is serving this network a cached copy (up to 4 min old)'); else setSrc('live', 'live feed');
   } catch (err){
     if (!games.length){
       try {
