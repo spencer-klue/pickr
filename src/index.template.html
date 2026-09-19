@@ -327,7 +327,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
   <div class="stat"><span class="label">Updated</span><b id="updated">–</b><span class="ago" id="nextPoll"></span></div>
   <div class="spacer"></div>
   <button class="pill" id="fcsBtn" title="FCS is the smaller Division I tier (Montana, NDSU, the Ivies). Off keeps the board to the big FBS slate.">Small schools: off</button>
-  <button class="pill" id="soundBtn" title="Chime when the lead game changes">Sound: off</button>
+  <button class="pill" id="soundBtn" title="Chime when the lead game changes, crowd roar on a touchdown, sad trombone on a pick or fumble. Shift-click to hear them.">Sound: off</button>
   <span class="pill" id="src">connecting…</span>
   <span class="pollbar" id="pollbar"></span>
 </header>
@@ -661,6 +661,7 @@ function moments(p, g){
     else if (/blocked/i.test(lp)) add('Blocked kick', 'big', T(g.poss), lp);
     else if (/turnover on downs/i.test(lp) || (p.down === 4 && possChanged && !/punt|field goal|kick/i.test(lp))) add('Turnover on downs', 'big', T(g.poss), lp);
     else if (/sack/i.test(lp)) add('Sack', 'play', T(g.poss === 'home' ? 'away' : 'home'), lp);
+    else if (/dropped|drops the|drop by/i.test(lp)) add('Drop', 'mid', T(g.poss), lp);
     else if (!p.isRZ && g.isRZ) add('Red zone', 'mid', T(g.poss), lp || g.ddText);
     else add(g.ddText || 'Play', 'play', T(g.poss), lp);
   } else if (!p.isRZ && g.isRZ) add('Red zone', 'mid', T(g.poss), g.ddText);
@@ -673,7 +674,7 @@ const LVL = { big: 3, mid: 2, play: 1 };
 function addMoments(list){
   feed = list.concat(feed).sort((x, y) => y.at - x.at).slice(0, 80);
   renderMoments(list);
-  for (const m of list) if (m.level === 'big') celebrate(m);
+  for (const m of list){ if (m.level === 'big') celebrate(m); else if (m.kind === 'Drop' && sound && m.gid === leaderId) soundFor('Drop'); }
 }
 function renderMoments(fresh){
   const el = $('#moments'); const min = LVL[moLevel];
@@ -705,17 +706,47 @@ function nextCele(){
   el.dataset.go = m.gid;
   el.innerHTML = `${t.logo ? `<img src="${esc(t.logo)}" alt="">` : '<span style="font-size:44px">🏈</span>'}<span><div class="k">${esc(m.kind)}</div>${t.name ? `<div class="w">${esc(t.name)}${m.lead ? ' · ' + esc(m.lead) : ''}</div>` : ''}<div class="s">${esc(m.score)}${m.detail ? ' · ' + esc(m.detail) : ''}</div>${m.text ? `<div class="p">${esc(m.text)}</div>` : ''}</span><span class="bar"></span>`;
   el.hidden = false; el.classList.remove('out'); void el.offsetWidth; el.classList.add('show');
-  if (sound) fanfare();
+  if (sound) soundFor(m.kind);
   try { if (navigator.vibrate) navigator.vibrate([60, 40, 60]); } catch(e){}
   const done = () => { el.classList.remove('show'); el.classList.add('out'); setTimeout(() => { el.hidden = true; nextCele(); }, 450); };
   el.onclick = () => { clearTimeout(el._t); pinned = el.dataset.go; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); done(); };
   clearTimeout(el._t); el._t = setTimeout(done, dur);
 }
+// sounds, all synthesised (no audio files): roar for points, sad trombone for giveaways, chime for the rest
+function actxGet(){ actx = actx || new (window.AudioContext||window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume().catch(() => {}); return actx; }
+const ROAR = /^(touchdown|pick six|scoop and score|return touchdown|safety)$/i, WOMP = /^(interception|fumble|blocked kick|turnover on downs|drop)$/i;
+function soundFor(kind){ try { if (ROAR.test(kind)) crowdRoar(); else if (WOMP.test(kind)) sadTrombone(); else chime(); } catch(e){} }
+function sadTrombone(){
+  const c = actxGet(), t = c.currentTime;
+  [[233.08,0,0.42],[220,0.48,0.42],[207.65,0.96,0.42],[196,1.44,1.5]].forEach(([f,dt,dur], i) => {
+    const o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter();
+    o.type = 'sawtooth'; lp.type = 'lowpass'; lp.frequency.value = 850; lp.Q.value = 3;
+    o.frequency.setValueAtTime(f*1.04, t+dt); o.frequency.exponentialRampToValueAtTime(f*0.96, t+dt+dur);   // each note slides down: the "waaah"
+    if (i === 3){ const v = c.createOscillator(), vg = c.createGain(); v.frequency.value = 5.5; vg.gain.value = 7; v.connect(vg).connect(o.frequency); v.start(t+dt+0.3); v.stop(t+dt+dur); }
+    g.gain.setValueAtTime(0.0001, t+dt); g.gain.exponentialRampToValueAtTime(0.25, t+dt+0.06); g.gain.setValueAtTime(0.25, t+dt+dur-0.12); g.gain.exponentialRampToValueAtTime(0.0001, t+dt+dur);
+    o.connect(lp).connect(g).connect(c.destination); o.start(t+dt); o.stop(t+dt+dur+0.05);
+  });
+}
+function crowdRoar(){
+  const c = actxGet(), t = c.currentTime, dur = 3.4;
+  const buf = c.createBuffer(1, Math.floor(c.sampleRate*dur), c.sampleRate), d = buf.getChannelData(0);
+  let b0 = 0, b1 = 0, b2 = 0;
+  for (let i = 0; i < d.length; i++){ const w = Math.random()*2-1; b0 = 0.99765*b0 + w*0.0990460; b1 = 0.96300*b1 + w*0.2965164; b2 = 0.57000*b2 + w*1.0526913; d[i] = (b0+b1+b2+w*0.1848)*0.12; }   // pink noise = crowd
+  const src = c.createBufferSource(); src.buffer = buf;
+  const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.6; bp.frequency.setValueAtTime(350, t); bp.frequency.linearRampToValueAtTime(1000, t+0.9);
+  const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.8, t+0.55); g.gain.setValueAtTime(0.8, t+1.5); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  src.connect(bp).connect(g).connect(c.destination); src.start(t); src.stop(t+dur);
+  [1, 1.5, 2, 2.5].forEach((m, i) => {                       // a few voices under the noise so it reads as people, not wind
+    const o = c.createOscillator(), og = c.createGain(); o.type = 'triangle'; o.frequency.value = 170*m*(1 + (i-1.5)*0.012);
+    og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.05, t+0.5); og.gain.exponentialRampToValueAtTime(0.0001, t+2.4);
+    o.connect(og).connect(bp); o.start(t); o.stop(t+2.5);
+  });
+  setTimeout(fanfare, 250);                                    // horns on top of the crowd
+}
 function lightColor(hex){ if (!hex) return false; const n = parseInt(hex.slice(1), 16); const r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255; return (0.2126*r + 0.7152*g + 0.0722*b) / 255 > 0.58; }
 function fanfare(){
   try {
-    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
-    const t = actx.currentTime;
+    const t = actxGet().currentTime;
     [[523.25,0],[659.25,0.1],[783.99,0.2],[1046.5,0.32],[1046.5,0.5]].forEach(([f,dt]) => {
       const o = actx.createOscillator(), gn = actx.createGain();
       o.type = 'triangle'; o.frequency.value = f;
@@ -1569,7 +1600,9 @@ document.addEventListener('click', e => {
   const pane = e.target.closest('[data-pane]');
   if (pane){ const g = games.find(x => x.id === pane.dataset.pane); if (ext && g) wallLead(g); else openPane(pane.dataset.pane); return; }
 });
-$('#soundBtn').addEventListener('click', () => {
+$('#soundBtn').addEventListener('click', (e) => {
+  try { actxGet(); } catch(e2){}
+  if (e.shiftKey){ try { crowdRoar(); setTimeout(sadTrombone, 4200); } catch(e3){} return; }                                // a click is what unlocks audio in the browser
   sound = !sound; try { localStorage.setItem('pk.sound', sound?'1':'0'); } catch(e){}
   if (sound) chime(); render();
 });

@@ -58,7 +58,7 @@ Here's what everything on the page is for, top to bottom.
 ### The top bar
 - **Live now / Today / Updated**: how many games are on right now, how many kick off today, and when the board last checked the scoreboard.
 - **Small schools: off/on**: flip on to include FCS games too (the smaller Division I schools: Montana, North Dakota State, the Ivies). Off by default so the board stays about the big slate.
-- **Sound: off/on**: a short chime whenever the director changes the lead game, and a fanfare when a celebration card fires. Handy if you're in the kitchen.
+- **Sound: off/on**: with sound on, a touchdown gets a crowd roar with horns on top, a pick, fumble, blocked kick, turnover on downs or dropped pass gets the sad trombone (waaah waaah waaaah), and the director changing the lead gets a short chime. Shift-click the pill to hear the roar and the trombone back to back. All the sounds are made by the page itself, so nothing to download and nothing to buffer.
 - **Updated**: when the board last checked, how long ago that was, and a countdown to the next check. The thin green line under the header is the same countdown.
 - **The last pill** tells you where the scores are coming from. "live feed" is good. "delayed feed" means ESPN is handing your network a cached copy that can be a few minutes old (it happens if a network hits ESPN too hard; it clears on its own). "snapshot" means the board couldn't reach the scoreboard at all and is showing you the last picture it saved.
 
@@ -73,7 +73,7 @@ The wire. Every play from every live game lands here the moment the board sees i
 - **Scores & drives** (the default): all of the above plus field goals, red-zone trips, kickoffs, and every final.
 - **Every play**: the full play-by-play across the slate. Fun on a big screen, a firehose on a phone.
 
-**Celebration cards.** When something big happens in any game, a card in that team's colours slides down from the top of the screen: TOUCHDOWN, PICK SIX, INTERCEPTION, FUMBLE, OVERTIME, and so on, with the score and the play. It stays for a few seconds and then leaves on its own. Tap it to jump straight to that game. With **Sound** on you also get a little fanfare, and phones give a short buzz. This is the feature for when you're at one game and want to feel the other eleven.
+**Celebration cards.** When something big happens in any game, a card in that team's colours slides down from the top of the screen: TOUCHDOWN, PICK SIX, INTERCEPTION, FUMBLE, OVERTIME, and so on, with the score and the play. It stays for a few seconds and then leaves on its own. Tap it to jump straight to that game. With **Sound** on, points get the crowd roar and giveaways get the sad trombone, and phones give a short buzz. A dropped pass in the game on the call also gets the trombone, when ESPN's play text mentions the drop. This is the feature for when you're at one game and want to feel the other eleven.
 
 ### Pick order
 The list on the right is every live game, ranked hottest to coldest. The coloured stripe on the left of each tile is the heat: red is must-see, orange is warming up, grey is a wait-and-see.
